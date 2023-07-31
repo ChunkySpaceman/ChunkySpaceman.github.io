@@ -1,0 +1,692 @@
+<!doctype html>
+<html>
+<head>
+<title>Astroneer Solar System Builder</title>
+<meta name="description" content="WebUI for Custom Astroneer Solar System">
+<meta name="keywords" content="astroneer custom game generator">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap because I hate tailwind -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- jquery -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
+
+</head>
+<body class="bg-dark text-white">
+<style>
+
+.btn-primary{
+    background-color: #129af0 !important;
+    background:       #129af0 !important;
+    border-color:     #129af0 !important;
+
+}
+
+.btn-outline-primary,.border-primary{
+    border-color:     #129af0 !important;
+}
+
+.btn-outline-primary:checked,.btn-outline-primary:active,.btn-check:checked,.btn-check:checked+.btn{
+    background-color: #129af0 !important;
+    background:       #129af0 !important;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    background: red;
+}
+input[type=range]::-moz-range-thumb {
+    background: red;
+}
+input[type=range]::-ms-thumb {
+    background: red;
+}
+
+
+/********************************/
+
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 120px;
+  height: 34px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #129af0;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #129af0;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(86px);
+  -ms-transform: translateX(86px);
+  transform: translateX(86px);
+  
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.nav-link.active {
+    background-color:#212529 !important;
+    color:white !important;
+    border-bottom: 1px solid transparent !important;
+}
+
+.nav-link{
+    border-bottom: 1px solid white !important;
+    color:white !important;
+
+}
+
+</style>
+
+
+<script>
+function scaleValue(value){
+    if(value <= 50){
+        value = value/50;
+    }else{
+        value = (value-50)*9/50 + 1;
+    }
+    return value;
+}
+</script>
+
+
+<ul class="nav-fill nav nav-tabs bg-gray border-bottom-0">
+    <li class="nav-item">
+        <a id="LaunchOptionsNav" class="nav-link px-1" href="#">
+            <img src="https://static.wikia.nocookie.net/astroneer_gamepedia/images/2/28/Icon_Dropship.png" width='30' height='30'>
+            Launch Options
+        </a>
+    </li>
+    <li class="nav-item">
+        <a id="StartingItemsNav" class="nav-link px-1" href="#">
+            <img src="https://static.wikia.nocookie.net/astroneer_gamepedia/images/6/68/Icon_Backpack.png"
+            width='30' height='30'>
+            Starting Items
+        </a>
+    </li>
+    <li class="nav-item">
+        <a id="RespawnSettingsNav" class="nav-link px-1" href="#">
+            <img src="https://static.wikia.nocookie.net/astroneer_gamepedia/images/1/10/Icon_Figurine.png" width='30' height='30'>
+            Respawn
+        </a>
+    </li>
+    <li class="nav-item">
+        <a id="PowerSettingsNav" class="nav-link px-1" href="#">
+            <img src="https://static.wikia.nocookie.net/astroneer_gamepedia/images/3/31/Icon_Battery.png" width='30' height='30'>
+            Power
+        </a>
+    </li>
+    <li class="nav-item">
+        <a id="GlobalOxygenNav" class="nav-link px-1" href="#">
+            <img src="https://static.wikia.nocookie.net/astroneer_gamepedia/images/1/10/Icon_Oxygen_Tank.png" width='30' height='30'>
+            Oxygen
+        </a>
+    </li>
+    <li class="nav-item">
+        <a id="ResearchSettingsNav" class="nav-link px-1" href="#">
+            <img src="https://static.wikia.nocookie.net/astroneer_gamepedia/images/2/2a/Icon_Research.png" width='30' height='30'>
+            Research
+        </a>
+    </li>
+    <li class="nav-item">
+        <a id="PlanetBiomeNav" class="nav-link px-1" href="#">
+            <img src="https://static.wikia.nocookie.net/astroneer_gamepedia/images/b/b8/Icon_Recreational_Sphere.png" width='30' height='30'>
+            Planet Biome Editor
+        </a>
+    </li>
+</ul>
+
+<script>
+    $(document).ready(function(){
+        $("#LaunchOptionsNav").addClass("active");
+        $("#LaunchOptionsTab").removeClass("d-none");
+        
+    });
+
+    $(".nav-link").click(function(){
+        //tabs
+        $(".nav-link").removeClass("active");
+        
+        
+        $("#"+this.id).addClass("active");
+        //pages
+        $(".navPage").addClass("d-none");
+        var navtab = this.id;
+        navtab = navtab.slice(0,-3) + "Tab";
+        $("#"+navtab).removeClass("d-none");
+    });
+</script>
+
+
+<div class="container">
+ 
+
+<div class="pt-5 navPage" id="LaunchOptionsTab">
+  <div class="row py-3">
+  	<h1>Launch Options</h1>
+    <div class="w-100 border-top border-primary my-3"></div>
+
+    <div class="col-12 h4 py-2">
+        <span class="float-start px-2"> Skip Launch Sequence </span>
+        <label class="switch float-end">
+            <input type="checkbox" id="SkipLaunchSequence">
+            <span class="slider round"></span>
+        </label>
+    </div>
+    <div class="col-12 h4 py-2">
+        <span class="float-start px-2"> No Starting Shelter </span>
+        <label class="switch float-end">
+            <input type="checkbox" id="NoStartingShelter">
+            <span class="slider round"></span>
+        </label>
+    </div>
+    <div class="col-12">
+        <div class="h4 text-align-middle my-2 px-2 col-12">Starting Planet</div>
+        <div class="row" id="starterPlanetSelector"></div>
+    </div>
+  </div>
+<script>
+	$("#SkipLaunchSequence").prop('checked', true);
+	$("#NoStartingShelter").prop('checked', true);
+
+</script>
+  
+  
+
+
+</div>
+
+<div class="pt-5 d-none navPage" id="StartingItemsTab">
+    <div id="startingItemsList" class="row py-3">
+        <h1>Starting Items</h1>
+        <div class="w-100 border-top border-primary my-3"></div>
+
+    </div>
+</div>
+<script>
+var slots=[
+    "Left Aux",
+    "Right Aux",
+    "Item Slot 1",
+    "Item Slot 2",
+    "Item Slot 3",
+    "Item Slot 4",
+    "Item Slot 5",
+    "Item Slot 6",
+    "Item Slot 7",
+    "Item Slot 8",
+    "Tool Slot 1",
+    "Tool Slot 2",
+    "Tool Slot 3"
+];
+
+var items=[
+    "None",
+    "Packager",
+    "Leveling Block",
+    "Oxygen Filters",
+    "Oxygen Tank",
+    "Beacon",
+    "Floodlight",
+    "Power Cells",
+    "Small Battery",
+    "Dynamite",
+    "Small Camera",
+    "Small Trumpet Horn",
+    "Small Squeaker Horn",
+    "Hoverboard",
+    "QT-RTG",
+    "Hydrazine"
+];
+var itemsIcons=[
+"",
+"https://astroneer.wiki.gg/images/thumb/e/e9/Icon_Packager.png/30px-Icon_Packager.png",
+"https://astroneer.wiki.gg/images/thumb/4/4b/Icon_Leveling_Block.png/30px-Icon_Leveling_Block.png",
+"https://astroneer.wiki.gg/images/thumb/1/10/Icon_Oxygen_Tank.png/30px-Icon_Oxygen_Tank.png",
+"https://astroneer.wiki.gg/images/thumb/1/10/Icon_Oxygen_Tank.png/30px-Icon_Oxygen_Tank.png",
+"https://astroneer.wiki.gg/images/thumb/0/09/Icon_Beacon.png/30px-Icon_Beacon.png",
+"https://astroneer.wiki.gg/images/thumb/d/d3/Icon_Worklight.png/30px-Icon_Worklight.png",
+"https://astroneer.wiki.gg/images/thumb/9/9b/Icon_Power_Cells.png/30px-Icon_Power_Cells.png",
+"https://astroneer.wiki.gg/images/thumb/3/31/Icon_Battery.png/30px-Icon_Battery.png",
+"https://astroneer.wiki.gg/images/thumb/0/08/Icon_Dynamite.png/30px-Icon_Dynamite.png",
+"https://astroneer.wiki.gg/images/thumb/1/1e/Icon_Small_Camera.png/30px-Icon_Small_Camera.png",
+"https://astroneer.wiki.gg/images/thumb/1/11/Icon_Horn.png/30px-Icon_Horn.png",
+"https://astroneer.wiki.gg/images/thumb/1/11/Icon_Horn.png/30px-Icon_Horn.png",
+"https://astroneer.wiki.gg/images/thumb/f/ff/Icon_Hoverboard.png/30px-Icon_Hoverboard.png",
+"https://astroneer.wiki.gg/images/thumb/a/a7/Icon_Generator.png/30px-Icon_Generator.png",
+"https://astroneer.wiki.gg/images/thumb/f/fb/Icon_Hydrazine.png/30px-Icon_Hydrazine.png"
+];
+
+	slots.forEach(function(slotName,slotIndex){
+        $("#startingItemsList").append("<div class='col-md-6'><div class='mb-3 '><label class='col-4 col-form-label' for='Slot"+slotIndex+"'>"+slotName+"</label><select class='form-select col-8' id='Slot"+slotIndex+"'></select></div></div>");
+        
+        items.forEach(function(itemName,itemIndex){
+            $("#Slot"+slotIndex).append("<option value='"+itemIndex+"'>"+itemName+"</option>");
+        });
+    });
+
+
+
+</script>
+
+<div class="pt-5 d-none navPage" id="RespawnSettingsTab">
+    <div class="row py-3">
+        <h1>Respawn Settings</h1>
+        <div class="w-100 border-top border-primary my-3"></div>       
+        <div class="col-12 h4 py-2">
+            <span class="float-start px-2"> Limit Respawns? </span>
+            <label class="switch float-end">
+                <input type="checkbox" id="LimitRespawns">
+                <span class="slider round"></span>
+            </label>
+        </div>
+        <div class="col-12 h4 py-2">
+            <span class="float-start px-2"> Limit Respawns Per Player? </span>
+            <label class="switch float-end">
+                <input type="checkbox" id="LimitRespawnsPerPlayer">
+                <span class="slider round"></span>
+            </label>
+        </div>
+        
+        <h5 class="">Respawn Limit (more is easier)</h5>
+        <div class="col-9 pt-4">
+            <input id="RespawnLimitSlider" type="range" value="10" class="w-100 h-100" data-slider-min="0" data-slider-max="100" data-slider-step="1"  />
+        </div>
+        <div class="col-2 pt-4">
+            <input id="RespawnLimitValue" class="form-control w-100" type="number" step=1 value="10" aria-label="default input example">
+        </div>
+        <div class="col-1 pt-4">
+            <div id="RespawnLimitReset" class="btn btn-block btn-danger">Reset</div>
+        </div>
+        <script>       
+            $('#RespawnLimitSlider').on('input', function() {
+                $("#RespawnLimitValue").val($(this).val());
+            });
+            
+            $("#RespawnLimitReset").on('click', function(){
+                $("#RespawnLimitValue").val(10);
+                $("#RespawnLimitSlider").val(10);
+                
+            });
+        </script>
+        </div>
+</div>
+
+<div class="pt-5 d-none navPage" id="PowerSettingsTab">
+<div class="row py-3">
+	<h1>Power Settings</h1>
+    <div class="w-100 border-top border-primary my-3"></div>
+
+    <h5 class="">Global Power Generation (more is easier)</h5>
+    <div class="col-9 pt-4">
+        <input id="GlobalPowerGenerationSlider" type="range" value="50" class="w-100 h-100" data-slider-min="0" data-slider-max="100" data-slider-step="1"  />
+    </div>
+    <div class="col-2 pt-4">
+        <input id="GlobalPowerGenerationValue" class="form-control w-100" type="number" step=0.01 value="1" aria-label="default input example">
+
+    </div>
+    <div class="col-1 pt-4">
+        <div id="GlobalPowerGenerationReset" class="btn btn-block btn-danger">Reset</div>
+    </div>
+    <script>       
+        $('#GlobalPowerGenerationSlider').on('input', function() {
+            $("#GlobalPowerGenerationValue").val(scaleValue($(this).val()));
+        });
+        
+        $("#GlobalPowerGenerationReset").on('click', function(){
+            $("#GlobalPowerGenerationValue").val(1);
+            $("#GlobalPowerGenerationSlider").val(50);
+            
+        });
+    </script>
+    
+
+    
+    <h5 class="pt-2">Global Power Consumption (less is easier)</h5>    
+    <div class="col-9 pt-4">
+        <input id="GlobalPowerConsumptionSlider" type="range" value="50" class="w-100 h-100" data-slider-min="0" data-slider-max="100" data-slider-step="1"  />
+    </div>
+    <div class="col-2 pt-4">
+        <input id="GlobalPowerConsumptionValue" class="form-control w-100" type="number" step=0.01 value="1" aria-label="default input example">
+
+    </div>
+    <div class="col-1 pt-4">
+        <div id="GlobalPowerConsumptionReset" class="btn btn-block btn-danger">Reset</div>
+    </div>
+    <script>       
+        $('#GlobalPowerConsumptionSlider').on('input', function() {
+            $("#GlobalPowerConsumptionValue").val(scaleValue($(this).val()));
+        });
+        
+        $("#GlobalPowerConsumptionReset").on('click', function(){
+            $("#GlobalPowerConsumptionValue").val(1);
+            $("#GlobalPowerConsumptionSlider").val(50);
+            
+        });
+    </script>
+    
+    
+    <h5 class="pt-2">Global Solar Generation (more is easier)</h5>   
+    <div class="col-9 pt-4">
+        <input id="SolarPowerGenerationSlider" type="range" value="50" class="w-100 h-100" data-slider-min="0" data-slider-max="100" data-slider-step="1"  />
+    </div>
+    <div class="col-2 pt-4">
+        <input id="SolarPowerGenerationValue" class="form-control w-100" type="number" step=0.01 value="1" aria-label="default input example">
+
+    </div>
+    <div class="col-1 pt-4">
+        <div id="SolarPowerGenerationReset" class="btn btn-block btn-danger">Reset</div>
+    </div>
+    <script>       
+        $('#SolarPowerGenerationSlider').on('input', function() {
+            $("#SolarPowerGenerationValue").val(scaleValue($(this).val()));
+        });
+        
+        $("#SolarPowerGenerationReset").on('click', function(){
+            $("#SolarPowerGenerationValue").val(1);
+            $("#SolarPowerGenerationSlider").val(50);
+            
+        });
+    </script>
+
+        
+    <h5 class="pt-2">Global Wind Generation (more is easier)</h5>
+    <div class="col-9 pt-4">
+        <input id="WindPowerGenerationSlider" type="range" value="50" class="w-100 h-100" data-slider-min="0" data-slider-max="100" data-slider-step="1"  />
+    </div>
+    <div class="col-2 pt-4">
+        <input id="WindPowerGenerationValue" class="form-control w-100" type="number" step=0.01 value="1" aria-label="default input example">
+
+    </div>
+    <div class="col-1 pt-4">
+        <div id="WindPowerGenerationReset" class="btn btn-block btn-danger">Reset</div>
+    </div>
+    <script>       
+        $('#WindPowerGenerationSlider').on('input', function() {
+            $("#WindPowerGenerationValue").val(scaleValue($(this).val()));
+        });
+        
+        $("#WindPowerGenerationReset").on('click', function(){
+            $("#WindPowerGenerationValue").val(1);
+            $("#WindPowerGenerationSlider").val(50);
+            
+        });
+    </script>
+
+
+</div>
+</div>
+
+
+<div class="pt-5 d-none navPage" id="GlobalOxygenTab">
+<div class="row py-3"> 
+    <h1>Global Oxygen</h1>
+    <div class="w-100 border-top border-primary my-3"></div>
+
+    <div class="col-12 h5">Global Oxygen Consumption (less is easier)</div>   
+
+    <div class="col-9 pt-2">
+        <input id="GlobalOxygenConsumptionSlider" type="range" value="50" class="w-100 h-100" data-slider-min="0" data-slider-max="100" data-slider-step="1"  />
+    </div>
+    <div class="col-2 pt-2">
+        <input id="GlobalOxygenConsumptionValue" class="form-control w-100" type="number" step=0.01 value="1" aria-label="default input example">
+
+    </div>
+    <div class="col-1 pt-2">
+        <div id="GlobalOxygenConsumptionReset" class="btn btn-block btn-danger">Reset</div>
+    </div>
+    <script>       
+        $('#GlobalOxygenConsumptionSlider').on('input', function() {
+            $("#GlobalOxygenConsumptionValue").val(scaleValue($(this).val()));
+        });
+        
+        $("#GlobalOxygenConsumptionReset").on('click', function(){
+            $("#GlobalOxygenConsumptionValue").val(1);
+            $("#GlobalOxygenConsumptionSlider").val(50);
+            
+        });
+    </script>
+    <div class="col-12 h4 pt-5">
+        <span class="float-start px-2"> Free Oxygen Generation </span>
+        <label class="switch float-end">
+            <input type="checkbox" id="FreeOxygenConsumption">
+            <span class="slider round"></span>
+        </label>
+    </div>
+    
+    
+</div>
+</div>
+
+<div class="pt-5 d-none navPage" id="ResearchSettingsTab">
+<div class="row py-3"> 
+
+    <h1>Research Settings</h1>
+    <div class="w-100 border-top border-primary my-3"></div>
+
+    <div class="col-12 h5">Starting Bytes (more is easier)</div>   
+
+    <div class="col-9 pt-2">
+        <input id="StartingBytesSlider" type="range" value="0" class="w-100 h-100" data-slider-min="0" data-slider-max="1000000" data-slider-step="1000"  />
+    </div>
+    <div class="col-2 pt-2">
+        <input id="StartingBytesValue" class="form-control w-100" type="number" step=1 value="0" aria-label="default input example">
+
+    </div>
+    <div class="col-1 pt-2">
+        <div id="StartingBytesReset" class="btn btn-block btn-danger">Reset</div>
+    </div>
+    <script>       
+        $('#StartingBytesSlider').on('input', function() {
+            $("#StartingBytesValue").val($(this).val());
+        });
+        
+        $("#StartingBytesReset").on('click', function(){
+            $("#StartingBytesValue").val(0);
+            $("#StartingBytesSlider").val(0);
+            
+        });
+    </script>
+    
+    <div class="col-12 h5">Research Rewards Multiplier (more is easier)</div>   
+    <div class="col-9 pt-2">
+        <input id="ResearchRewardSlider" type="range" value="50" class="w-100 h-100" data-slider-min="0" data-slider-max="100" data-slider-step="1"  />
+    </div>
+    <div class="col-2 pt-2">
+        <input id="ResearchRewardValue" class="form-control w-100" type="number" step=0.01 value="1" aria-label="default input example">
+
+    </div>
+    <div class="col-1 pt-2">
+        <div id="ResearchRewardReset" class="btn btn-block btn-danger">Reset</div>
+    </div>
+    <script>       
+        $('#ResearchRewardSlider').on('input', function() {
+            $("#ResearchRewardValue").val(scaleValue($(this).val()));
+        });
+        
+        $("#ResearchRewardReset").on('click', function(){
+            $("#ResearchRewardValue").val(1);
+            $("#ResearchRewardSlider").val(50);
+            
+        });
+    </script>
+    
+    <div class="col-12 h5">Research Speed Multiplier (more is easier)</div>   
+    <div class="col-9 pt-2">
+        <input id="ResearchSpeedSlider" type="range" value="50" class="w-100 h-100" data-slider-min="0" data-slider-max="100" data-slider-step="1"  />
+    </div>
+    <div class="col-2 pt-2">
+        <input id="ResearchSpeedValue" class="form-control w-100" type="number" step=0.01 value="1" aria-label="default input example">
+
+    </div>
+    <div class="col-1 pt-2">
+        <div id="ResearchSpeedReset" class="btn btn-block btn-danger">Reset</div>
+    </div>
+    <script>       
+        $('#ResearchSpeedSlider').on('input', function() {
+            $("#ResearchSpeedValue").val(scaleValue($(this).val()));
+        });
+        
+        $("#ResearchSpeedReset").on('click', function(){
+            $("#ResearchSpeedValue").val(1);
+            $("#ResearchSpeedSlider").val(50);
+            
+        });
+    </script>
+    
+    <h1 class="pt-3">Research Catalog Settings</h1>
+    <div class="w-100 border-top border-primary my-3"></div>
+    <div id="ResearchCatalogSettingsList"></div>
+
+<script>
+var catalog=[
+    "Disable Vehicles",
+    "Disable Power Generators",
+    "Disable Oxygen Items",
+    "Disable Printers",
+    "Disable Base Modules",
+    "Disable Platforms",
+    "Disable Shuttles"
+];
+    catalog.forEach(function(catalogName,catalogIndex){
+        $("#ResearchCatalogSettingsList").append("<div class='col-12 h4 pt-5'><span class='float-start px-2'>"+catalogName+"</span><label class='switch float-end'><input type='checkbox' id='DisableCatalog"+catalogIndex+"'><span class='slider round'></span></label></div>");
+    });
+
+</script>
+
+</div>
+</div>
+
+
+<div class="pt-5 d-none navPage" id="PlanetBiomeTab">
+
+    <div class="row py-3" id="PlanetBiomeEditor">
+        <h1>Planet Biome Editor</h1>
+        <div class="w-100 border-top border-primary my-3"></div>
+
+    </div>
+
+</div>
+
+
+
+<!-- Modals -->
+<div class="modal fade" id="SettingsPlanetId1" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Planet 1</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        TODO: SETTINGS
+		1,SylvaBiomes = [Forests,Plains,Mountains,Crevasses,Caves,Mantle,Core]
+		<div class="mb-3">
+			<label for="GlobalGravity" class="form-label">Email address</label>
+			<input type="email" class="form-control" id="exampleFormControlInput1" placeholder="name@example.com">
+		</div>
+	
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<script>
+
+const planets = ["Sylva","Desolo","Vesania","Novus","Calidor","Glacio","Atrox"];
+const planetsIcons = [
+"https://astroneer.wiki.gg/images/d/d2/Icon_Sylva.png",
+"https://astroneer.wiki.gg/images/0/0e/Icon_Desolo.png",
+"https://astroneer.wiki.gg/images/f/fd/Icon_Vesania.png",
+"https://astroneer.wiki.gg/images/1/1c/Icon_Novus.png",
+"https://astroneer.wiki.gg/images/f/f6/Icon_Calidor.png",
+"https://astroneer.wiki.gg/images/d/dc/Icon_Glacio.png",
+"https://astroneer.wiki.gg/images/5/5c/Icon_Atrox.png"
+    ];
+$(document).ready(function () {
+	planets.forEach(function(name,index){
+		//planet selector buttons
+		$("#starterPlanetSelector").append("<div class='col-4 my-2 d-grid'><input type='radio' class='btn-check' name='StartingPlanetId' id='StartingPlanetId"+(index+1)+"'autocomplete='off' ><label class='btn btn-outline-light'for='StartingPlanetId"+(index+1)+"'><img alt='Icon Sylva.png' src="+planetsIcons[index]+" decoding='async' loading='lazy' width='30' height='30'> "+name+"</label></div>");
+		
+        //biome editor buttons
+        $("#PlanetBiomeEditor").append("<div class='col-4 my-2 d-grid'><button type='button' class='btn btn-outline-light' data-bs-toggle='modal' data-bs-target='#SettingsPlanetId"+(index+1)+"'><img alt='Icon Sylva.png' src="+planetsIcons[index]+" decoding='async' loading='lazy' width='30' height='30'> "+name+" Biomes</button></div>");
+        
+       
+	});
+
+	$("#StartingPlanetId1").prop('checked', true);
+	
+	
+});
+</script>
+
+
+<!-- bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+</body>
+</html>
